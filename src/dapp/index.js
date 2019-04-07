@@ -43,8 +43,8 @@ import './flightsurety.css';
 
 
         DOM.elid('submit-isAirline').addEventListener('click', () => {
-//            let airline = selectAirline.options[selectAirline.selectedIndex].value
-            let airline = DOM.elid('airline-address').value;
+            let airline = selectAirline.options[selectAirline.selectedIndex].value
+//            let airline = DOM.elid('airline-address').value;
             // Write transaction
             contract.isAirline(airline, (error, result) => {
                 console.log('Is Airline ' + airline +': ' + result); 
