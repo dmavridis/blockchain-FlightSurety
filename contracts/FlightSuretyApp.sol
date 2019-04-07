@@ -74,12 +74,14 @@ contract FlightSuretyApp {
     */
     constructor
                                 (                                    
-                                    address dataContract
+                                    address dataContract,
+                                    address firstAddress
                                 ) 
                                 public 
     {
         contractOwner = msg.sender;
         flightSuretyData = FlightSuretyData(dataContract);
+        flightSuretyData.authorizeCaller(firstAddress);
     }
 
     /********************************************************************************************/
@@ -91,8 +93,19 @@ contract FlightSuretyApp {
                             returns(bool) 
     {        
         return flightSuretyData.isOperational();
-    //    return true;  // Modify to call data contract's status
     }
+
+    function isAuthorized
+                            (
+                                address caller
+                            ) 
+                            public  
+                            returns(bool) 
+    {        
+        return flightSuretyData.isAuthorized(caller);
+    }
+
+
 
     function isAirline(
                             address airline
@@ -102,6 +115,18 @@ contract FlightSuretyApp {
     {     
         return flightSuretyData.isAirline(airline);
     }
+
+    function owner() external view returns(address){
+        return flightSuretyData.owner();
+    }
+
+    /********************************************************************************************/
+    /*                                     EVENT DIFINITIONS                                    */
+    /********************************************************************************************/
+
+    event AirlineRegistered(bool success, uint32 votes);
+
+
 
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
@@ -121,6 +146,7 @@ contract FlightSuretyApp {
                             //returns(bool success, uint256 votes)
                             returns (bool)
     {
+        require(isAuthorized(msg.sender), "Caller not authorized");
         return flightSuretyData.registerAirline(airline);
 //        return (success, 0);
     }
@@ -382,7 +408,9 @@ contract FlightSuretyData {
                             external returns (bool);
     
     function isOperational() public returns (bool);
-    
+    function isAuthorized(address caller) public returns (bool);
+    function authorizeCaller(address caller) public ;
+    function owner() external view returns (address);
     function isAirline(
                             address airline
                         ) 

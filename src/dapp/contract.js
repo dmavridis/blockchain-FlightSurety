@@ -25,8 +25,6 @@ export default class Contract {
             while(this.passengers.length < 5) {
                 this.passengers.push(accts[counter++]);
             }
-            console.log(this.web3.currentProvider)
-
             callback();
         });
     }
@@ -37,6 +35,13 @@ export default class Contract {
             .isOperational()
             .call({ from: self.owner}, callback);
     }
+
+    isAuthorized(caller, callback) {
+        let self = this;
+        self.flightSuretyApp.methods
+             .isAuthorized(caller)
+             .call({ from: self.owner}, callback);
+     }
 
     fetchFlightStatus(flight, callback) {
         let self = this;
@@ -52,18 +57,26 @@ export default class Contract {
             });
     }
 
-    registerAirline(airline,fromAccount, callback){
+    registerAirline(airline, fromAccount, callback){
         let self = this;
+        console.log(fromAccount)
         self.flightSuretyApp.methods
-            .registerAirline(airline)
-            .call({from: fromAccount}, callback);
-
+        .registerAirline(airline)
+        .send({from: fromAccount}, callback);
     }
 
     isAirline(airline, callback){
         let self = this;
         self.flightSuretyApp.methods
             .isAirline(airline)
-            .call( callback);
+            .call(callback);
+    }
+
+
+    owner(callback){
+        let self = this;
+        self.flightSuretyApp.methods
+            .owner()
+            .call(callback);
     }
 }

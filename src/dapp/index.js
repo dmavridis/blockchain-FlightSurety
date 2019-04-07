@@ -7,40 +7,38 @@ import './flightsurety.css';
 (async() => {
 
     let result = null;
-
-
     let registeredAirlines = [];
     let authorizedAccounts = [];
-
-
 
     let contract = new Contract('localhost', () => {
         authorizedAccounts.push(contract.owner);
 
+        console.log(contract.owner)
         /// Initialize accounts list
-
         var optionsAccount = contract.airlines;
         updateSelectList('selectAirline', contract.airlines);
         updateSelectList('selectAccount', authorizedAccounts);  
 
 
-        // Read transaction
-        contract.isOperational((error, result) => {
-
-            display('Operational Status', 'Check if contract is operational', 
-                [ { label: 'Operational Status', error: error, value: result} ]);
+        contract.isAuthorized(contract.owner, (error, result) => {
+            console.log('isAuthorized ' + contract.owner + ': ' + result)
         });
 
+        // Read transaction
+        contract.isOperational((error, result) => {
+            display('Operational Status', 'Check if contract is operational', 
+                [{ label: 'Operational Status', error: error, value: result}]);
+        });
 
         // User-submitted transaction
         DOM.elid('submit-oracle').addEventListener('click', () => {
             let flight = DOM.elid('flight-number').value;
-            // Write transaction
+//            Write transaction
             contract.fetchFlightStatus(flight, (error, result) => {
                 display('Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + result.timestamp} ]);
             });
-        })
 
+        })
 
         DOM.elid('submit-isAirline').addEventListener('click', () => {
             let airline = selectAirline.options[selectAirline.selectedIndex].value
@@ -51,19 +49,18 @@ import './flightsurety.css';
             });
         })
 
-
-
         DOM.elid('register-airline').addEventListener('click', () => {
 //            let airline = DOM.elid('airline-address').value;
             let from = selectAccount.options[selectAccount.selectedIndex].value
             let airline = selectAirline.options[selectAirline.selectedIndex].value
             contract.registerAirline(airline, from, (error, result) => {
+                console.log('Call from: ' + from)
                 console.log('Register Airline ' + airline +': ' + result); 
-                    if (result){
-                        registeredAirlines.push(airline)
-                        authorizedAccounts.push(airline)
-                        updateList('registeredAirline', [airline])
-                        updateSelectList('selectAccount', [airline])
+                if (result){
+                    registeredAirlines.push(airline)
+                    authorizedAccounts.push(airline)
+                    updateList('registeredAirline', [airline])
+                    updateSelectList('selectAccount', [airline])
                 }
             })
         });

@@ -59,11 +59,13 @@ contract FlightSuretyData {
     */
     constructor
                                 (
+      //                              address firstAddress
                                 ) 
-                                public 
+                                public
+
     {
-        contractOwner = msg.sender;
-        authorizeCaller(contractOwner);
+ //       authorized[firstAddress] = true;
+ //       authorizeCaller(firstAddress);
     }
 
     /********************************************************************************************/
@@ -131,6 +133,18 @@ contract FlightSuretyData {
         return operational;
     }
 
+    function isAuthorized
+                    (
+                        address caller
+                    ) 
+                        public 
+                        view 
+                        returns(bool) 
+    {
+        return authorized[caller];
+    }
+
+
     /**
     * @dev Checks if airline is register
     *
@@ -144,15 +158,15 @@ contract FlightSuretyData {
                         view 
                         returns(bool) 
     {
-        // if (airlineExists[airline] == false){
-        //     return false;
-        // } 
-        // else{
         return airlines[airline].isRegistered;
-
-        // }
-        
     }
+
+    function owner() external view returns (address){
+        return contractOwner;
+    }
+
+
+
 
     function isAirlineFunded
                     (
@@ -238,32 +252,23 @@ contract FlightSuretyData {
                     )
                     external
                     requireIsOperational
-//                    requireIsCallerAuthorized
                     returns (bool)
     {
-//            require(isAirline(airline) == false, "Airline already registered");
+            require(isAirline(airline) == false, "Airline already registered");
 
             bool success = false;
+            airlines[airline] =  Airline({
+                                           isRegistered: false, 
+                                           isFunded: false
+                                       });
 
-            airlines[airline].isRegistered = false; 
-            airlines[airline].isFunded = false;
-
-            // airlines[airline] =  Airline({
-            //                                isRegistered: false, 
-            //                                isFunded: false
-            //                            });
-
-//            if (consensusAirline(airline)){
-
+            if (consensusAirline(airline)){
                 airlines[airline].isRegistered = true;     
- //               authorized[airline] = true;
- //               airlineExists[airline] = true;
+                authorized[airline] = true;
+                airlineExists[airline] = true;
                 success = true;
- //           }
-
-            return isAirline(airline);
-//            return success;
-
+            }
+            return success;
     }
 
 
