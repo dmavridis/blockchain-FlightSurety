@@ -53,8 +53,7 @@ export default class Contract {
         let self = this;
         console.log('caller: ' + fromAccount);
         self.flightSuretyApp.methods
-            .registerAirline(airline)
-            .send({ from: self.owner}, callback);
+        .registerAirline(airline)
+        .send({ from: self.owner, "gas": 4712388,"gasPrice": 100000000000}, callback);
     }
-
 }
