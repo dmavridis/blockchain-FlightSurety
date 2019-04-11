@@ -3,7 +3,6 @@ import DOM from './dom';
 import Contract from './contract';
 import './flightsurety.css';
 
-
 (async() => {
 
     let result = null;
@@ -11,51 +10,24 @@ import './flightsurety.css';
     let authorizedAccounts = [];
 
     let contract = new Contract('localhost', () => {
-        authorizedAccounts.push(contract.owner);
-
-        console.log(contract.owner)
-        /// Initialize accounts list
-        var optionsAccount = contract.airlines;
-        updateSelectList('selectAirline', contract.airlines);
-        updateSelectList('selectAccount', authorizedAccounts);  
-
-
-        contract.isAuthorized(contract.owner, (error, result) => {
-            console.log('isAuthorized ' + contract.owner + ': ' + result)
-        });
 
         // Read transaction
         contract.isOperational((error, result) => {
-            display('Operational Status', 'Check if contract is operational', 
-                [{ label: 'Operational Status', error: error, value: result}]);
+            display('Operational Status', 'Check if contract is operational', [ { label: 'Operational Status', error: error, value: result} ]);
         });
 
-        // User-submitted transaction
-        DOM.elid('submit-oracle').addEventListener('click', () => {
-            let flight = DOM.elid('flight-number').value;
-//            Write transaction
-            contract.fetchFlightStatus(flight, (error, result) => {
-                display('Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + result.timestamp} ]);
-            });
-
-        })
-
-        DOM.elid('submit-isAirline').addEventListener('click', () => {
-            let airline = selectAirline.options[selectAirline.selectedIndex].value
-//            let airline = DOM.elid('airline-address').value;
-            // Write transaction
-            contract.isAirline(airline, (error, result) => {
-                console.log('Is Airline ' + airline +': ' + result); 
-            });
-        })
-
+        // Initialize accounts list
+        authorizedAccounts.push(contract.owner);
+        var optionsAccount = contract.airlines;
+        updateSelectList('selectAirline', contract.airlines);
+        updateSelectList('selectAccount', authorizedAccounts);  
+    
         DOM.elid('register-airline').addEventListener('click', () => {
-//            let airline = DOM.elid('airline-address').value;
             let from = selectAccount.options[selectAccount.selectedIndex].value
             let airline = selectAirline.options[selectAirline.selectedIndex].value
             contract.registerAirline(airline, from, (error, result) => {
-                console.log('Call from: ' + from)
                 console.log('Register Airline ' + airline +': ' + result); 
+                console.log(error)
                 if (result){
                     registeredAirlines.push(airline)
                     authorizedAccounts.push(airline)
@@ -64,14 +36,13 @@ import './flightsurety.css';
                 }
             })
         });
-    
+        
+        
     });
-    
-
 })();
 
-function display(title, description, results) {
 
+function display(title, description, results) {
     let displayDiv = DOM.elid("display-wrapper");
     let section = DOM.section();
     section.appendChild(DOM.h2(title));
@@ -83,12 +54,7 @@ function display(title, description, results) {
         section.appendChild(row);
     })
     displayDiv.append(section);
-}
 
-function display_region(result, region) {
-
-    let displayDiv = DOM.elid("display-wrapper-"+region);
-    displayDiv.append(result + '\n\n,');
 }
 
 function updateSelectList(selectId, listElements){
@@ -102,10 +68,15 @@ function updateSelectList(selectId, listElements){
     }  
 }
 
-
 function updateList(listId, listItem){
     var registeredList = DOM.elid(listId);
     var el = document.createElement("li");
     el.textContent = listItem;
     registeredList.appendChild(el);
 }
+
+
+
+
+
+

@@ -11,10 +11,14 @@ import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
 /************************************************** */
 contract FlightSuretyApp {
     using SafeMath for uint256; // Allow SafeMath functions to be called for all uint256 types (similar to "prototype" in Javascript)
-    FlightSuretyData flightSuretyData;
+
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
+
+    // Data contract definition
+    FlightSuretyData flightSuretyData;
+
 
     // Flight status codees
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
@@ -50,8 +54,7 @@ contract FlightSuretyApp {
     modifier requireIsOperational() 
     {
          // Modify to call data contract's status
- //       require(true, "Contract is currently not operational");
-        require(isOperational(), "Contract is currently not operational");        
+        require(isOperational(), "Contract is currently not operational");  
         _;  // All modifiers require an "_" which indicates where the function body will be added
     }
 
@@ -73,9 +76,9 @@ contract FlightSuretyApp {
     *
     */
     constructor
-                                (                                    
-                                    address dataContract,
-                                    address firstAddress
+                                (
+                                address dataContract,
+                                address firstAddress
                                 ) 
                                 public 
     {
@@ -91,42 +94,19 @@ contract FlightSuretyApp {
     function isOperational() 
                             public  
                             returns(bool) 
-    {        
-        return flightSuretyData.isOperational();
+    {
+        return flightSuretyData.isOperational();  // Modify to call data contract's status
     }
 
-    function isAuthorized
+    function isAirline
                             (
-                                address caller
-                            ) 
-                            public  
-                            returns(bool) 
-    {        
-        return flightSuretyData.isAuthorized(caller);
-    }
-
-
-
-    function isAirline(
-                            address airline
+                                address airline
                             ) 
                             public  
                             returns(bool) 
     {     
         return flightSuretyData.isAirline(airline);
     }
-
-    function owner() external view returns(address){
-        return flightSuretyData.owner();
-    }
-
-    /********************************************************************************************/
-    /*                                     EVENT DIFINITIONS                                    */
-    /********************************************************************************************/
-
-    event AirlineRegistered(bool success, uint32 votes);
-
-
 
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
@@ -140,16 +120,15 @@ contract FlightSuretyApp {
     function registerAirline
                             (   
                                 address airline
-  //                              string name
                             )
-                            external
-                            //returns(bool success, uint256 votes)
-                            returns (bool)
+                            external 
+                            returns(bool)
     {
-        require(isAuthorized(msg.sender), "Caller not authorized");
+  //      require(isAuthorized(msg.sender), "Caller not authorized");#
         return flightSuretyData.registerAirline(airline);
-//        return (success, 0);
     }
+
+
 
 
    /**
@@ -157,15 +136,12 @@ contract FlightSuretyApp {
     *
     */  
     function registerFlight
-                            (
-                                string flightCode,
-                                uint256 timestamp,    
-                                address airline
+                                (
                                 )
                                 external
-                                returns (bool)              
-    {        
-        return flightSuretyData.registerFlight(flightCode, timestamp, airline);
+                                pure
+    {
+
     }
     
    /**
@@ -175,14 +151,13 @@ contract FlightSuretyApp {
     function processFlightStatus
                                 (
                                     address airline,
-                                    string  flight,
+                                    string memory flight,
                                     uint256 timestamp,
                                     uint8 statusCode
                                 )
-                                public
-                                returns (bool)
+                                internal
+                                pure
     {
-        return flightSuretyData.processFlightStatus(airline, flight, timestamp, statusCode);
     }
 
 
@@ -218,6 +193,7 @@ contract FlightSuretyApp {
 
     // Number of oracles that must respond for valid status
     uint256 private constant MIN_RESPONSES = 3;
+
 
     struct Oracle {
         bool isRegistered;
@@ -378,41 +354,38 @@ contract FlightSuretyApp {
 
 // endregion
 
-}
+}   
 
-/// Adding 
+// Data contract function definitions
 contract FlightSuretyData {
-    function registerAirline(
-                                address airline
-  //                              string name
-                            ) 
-                            external
-                            returns (bool);
+
+    function isOperational() 
+                                public 
+                                returns (bool);
+
+    function isAuthorized
+                                (
+                                    address caller
+                                ) 
+                                public returns (bool);
+
+    function authorizeCaller    
+                                (
+                                    address caller
+                                ) 
+                                public;
+
+    function registerAirline
+                                (
+                                    address airline
+                                ) 
+                                external
+                                returns (bool);
                             
-    function registerFlight(
+    function isAirline
+                                (
+                                    address airline
+                                ) 
+                                public returns (bool);
 
-                                string flightCode,
-                                uint256 timestamp,
-                                address airline
-                            )
-                            external
-                            returns(bool);
-
-    
-    function processFlightStatus(
-                                    address airline,
-                                    string  flight,
-                                    uint256 timestamp,
-                                    uint8 statusCode
-                                )
-                            external returns (bool);
-    
-    function isOperational() public returns (bool);
-    function isAuthorized(address caller) public returns (bool);
-    function authorizeCaller(address caller) public ;
-    function owner() external view returns (address);
-    function isAirline(
-                            address airline
-                        ) 
-                            public returns (bool);
 }

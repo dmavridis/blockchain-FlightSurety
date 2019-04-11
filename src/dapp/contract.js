@@ -16,7 +16,6 @@ export default class Contract {
 
     initialize(callback) {
         this.web3.eth.getAccounts((error, accts) => {
-
             this.owner = accts[0];
             let counter = 1;
             while(this.airlines.length < 5) {
@@ -36,13 +35,6 @@ export default class Contract {
             .call({ from: self.owner}, callback);
     }
 
-    isAuthorized(caller, callback) {
-        let self = this;
-        self.flightSuretyApp.methods
-             .isAuthorized(caller)
-             .call({ from: self.owner}, callback);
-     }
-
     fetchFlightStatus(flight, callback) {
         let self = this;
         let payload = {
@@ -57,26 +49,12 @@ export default class Contract {
             });
     }
 
-    registerAirline(airline, fromAccount, callback){
+    registerAirline(airline,fromAccount, callback){
         let self = this;
-        console.log(fromAccount)
+        console.log('caller: ' + fromAccount);
         self.flightSuretyApp.methods
-        .registerAirline(airline)
-        .send({from: fromAccount}, callback);
+            .registerAirline(airline)
+            .send({ from: self.owner}, callback);
     }
 
-    isAirline(airline, callback){
-        let self = this;
-        self.flightSuretyApp.methods
-            .isAirline(airline)
-            .call(callback);
-    }
-
-
-    owner(callback){
-        let self = this;
-        self.flightSuretyApp.methods
-            .owner()
-            .call(callback);
-    }
 }
