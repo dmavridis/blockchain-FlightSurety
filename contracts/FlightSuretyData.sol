@@ -39,7 +39,6 @@ contract FlightSuretyData {
     }  
 
     mapping(address => Airline) private airlines;
-    mapping(address => bool) private airlineExists;
     mapping(address => bool) private authorized;
     mapping(address => uint256) private registeredAirline;
     mapping(bytes32 => bool) private addressVoted;
@@ -187,18 +186,18 @@ contract FlightSuretyData {
 
     function consensusAirline                      
                     (
-                        address airline
+                        address airline,
+                        address _sender
                     )
                         internal
                         returns(bool)
     {
-        return true;
         cntAirlines++;
         if (cntAirlines <= AIRLINE_COUNT_THRESHOLD){
             return true;
         }
         cntAirlines--;
-        bytes32 votedKey = keccak256(abi.encodePacked(msg.sender, airline));
+        bytes32 votedKey = keccak256(abi.encodePacked(_sender, airline));
 
         // If a different airline is adding this one, increase the votes
         if (!addressVoted[votedKey]){
@@ -240,8 +239,8 @@ contract FlightSuretyData {
     */   
     function registerAirline
                             ( 
-                                address airline
-  
+                                address airline,
+                                address _sender
                             )
                             external
                             returns (bool)
@@ -253,10 +252,9 @@ contract FlightSuretyData {
                                            isFunded: false
                                        });
 
-            if (consensusAirline(airline)){
+            if (consensusAirline(airline, _sender)){
                 airlines[airline].isRegistered = true;     
                 authorized[airline] = true;
-                airlineExists[airline] = true;
                 success = true;
             }
             return success;
@@ -306,11 +304,18 @@ contract FlightSuretyData {
     *
     */   
     function fund
-                            (   
+                            (
+                                address sender,
+                                uint256 amount
                             )
                             public
                             payable
     {
+        
+        require(isAirline(sender), "Not a registered airline");
+        require(amount == AIRLINE_FUND_FEE, "Please pay the exact amount");
+ //       address(this).transfer(amount);
+        airlines[sender].isFunded = true;
     }
 
     function getFlightKey
@@ -334,7 +339,6 @@ contract FlightSuretyData {
                             external 
                             payable 
     {
-        fund();
     }
 
 

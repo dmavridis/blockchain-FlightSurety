@@ -37,8 +37,12 @@ import './flightsurety.css';
             })
         });
         
-        
-    });
+        // Update the registered airlines list from the blockchain
+        // In the webapp informatin is lost after refreshing
+        DOM.elid('populate-airline').addEventListener('click', () => {
+            populateAirlines(contract.airlines, contract);
+        });
+    })
 })();
 
 
@@ -75,8 +79,15 @@ function updateList(listId, listItem){
     registeredList.appendChild(el);
 }
 
-
-
-
+async function populateAirlines(array,contract) {
+    for (const item of array) {
+        await contract.isAirline(item, (error, result) => {
+            if (result){
+                console.log(contract.airlines[1])
+                updateSelectList('populateAirlines', [item])
+            }
+        })
+    }
+}
 
 

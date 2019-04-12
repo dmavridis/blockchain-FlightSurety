@@ -21,9 +21,11 @@
 
     <main class="container">
 
-
         <div id="display-wrapper" class="top-20"></div>
         <h4>0 - Register Airline</h4>
+
+        <div class="row top-20">
+        <btn class="btn btn-primary" id="register-airline">Create Airline</btn></div>
 
         <h5>Airline Accounts to be registered</h5>
         <select id="selectAirline"></select>
@@ -34,12 +36,26 @@
         <h5>Registered Airlines</h5>
         <ul id="registeredAirline"></ul>
 
-        <div class="row top-20">
-        <btn class="btn btn-primary" id="register-airline">Create Airline</btn>
-        </div>
-
         <div id="display-wrapper-airlines"></div>
 
+
+        <div id="display-wrapper" class="top-20">
+        <h4>1 - Fund Airline</h4>
+        <p>Populate the registered airlines from the Blockchain</p>
+        <btn class="btn btn-primary" id="populate-airline">Populate Registered Airlines</btn>
+        <div class="row top-20"> 
+        <p>Select airline to fund</p>
+        <select id="populateAirlines"></select>
+
+        <div class="form">Fund Amount (ETH)</div><input type="text" id="fund-amount"> 
+        <btn class="btn btn-primary" id="fund-airline">Fund Airline</btn>
+        </div>
+
+
+
+        <div id="display-wrapper" class="top-20"></div>
+        <h4>2 - Register Flight</h4>
+        <p>Airline can register an upcoming flight</p>
 
 
     </main>

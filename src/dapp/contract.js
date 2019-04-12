@@ -35,6 +35,14 @@ export default class Contract {
             .call({ from: self.owner}, callback);
     }
 
+    isAirline(airline, callback) {
+        let self = this;
+        console.log("checking: " + airline)
+        self.flightSuretyApp.methods
+             .isAirline(airline)
+             .call({ from: self.owner}, callback);
+     }
+
     fetchFlightStatus(flight, callback) {
         let self = this;
         let payload = {
@@ -54,6 +62,6 @@ export default class Contract {
         console.log('caller: ' + fromAccount);
         self.flightSuretyApp.methods
         .registerAirline(airline)
-        .send({ from: self.owner, "gas": 4712388,"gasPrice": 100000000000}, callback);
+        .send({ from: fromAccount, "gas": 4712388,"gasPrice": 100000000000}, callback);
     }
 }

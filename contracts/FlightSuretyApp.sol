@@ -19,7 +19,6 @@ contract FlightSuretyApp {
     // Data contract definition
     FlightSuretyData flightSuretyData;
 
-
     // Flight status codees
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
     uint8 private constant STATUS_CODE_ON_TIME = 10;
@@ -54,7 +53,7 @@ contract FlightSuretyApp {
     modifier requireIsOperational() 
     {
          // Modify to call data contract's status
-        require(isOperational(), "Contract is currently not operational");  
+        require(flightSuretyData.isOperational(), "Contract is currently not operational");  
         _;  // All modifiers require an "_" which indicates where the function body will be added
     }
 
@@ -66,6 +65,7 @@ contract FlightSuretyApp {
         require(msg.sender == contractOwner, "Caller is not contract owner");
         _;
     }
+
 
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
@@ -108,6 +108,18 @@ contract FlightSuretyApp {
         return flightSuretyData.isAirline(airline);
     }
 
+    function isAirlineFunded
+                            (
+                                address airline
+                            ) 
+                            public  
+                            returns(bool) 
+    {     
+        return flightSuretyData.isAirlineFunded(airline);
+    }
+
+
+
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -124,10 +136,24 @@ contract FlightSuretyApp {
                             external 
                             returns(bool)
     {
-  //      require(isAuthorized(msg.sender), "Caller not authorized");#
-        return flightSuretyData.registerAirline(airline);
+        require(flightSuretyData.isAuthorized(msg.sender), "Caller not authorized");
+        return flightSuretyData.registerAirline(airline, msg.sender);
     }
 
+
+
+   /**
+    * @dev Fund the airline
+    *
+    */   
+    function fund
+                            (   
+                            )
+                            external
+                            payable
+    {
+        flightSuretyData.fund(msg.sender, msg.value);
+    }
 
 
 
@@ -369,6 +395,12 @@ contract FlightSuretyData {
                                 ) 
                                 public returns (bool);
 
+    function isAirlineFunded
+                                (
+                                    address caller
+                                ) 
+                                public returns (bool);                               
+
     function authorizeCaller    
                                 (
                                     address caller
@@ -377,7 +409,8 @@ contract FlightSuretyData {
 
     function registerAirline
                                 (
-                                    address airline
+                                    address airline,
+                                    address _sender
                                 ) 
                                 external
                                 returns (bool);
@@ -387,5 +420,13 @@ contract FlightSuretyData {
                                     address airline
                                 ) 
                                 public returns (bool);
+
+    function fund
+                            (
+                                address sender,
+                                uint256 amount
+                            )
+                            public
+                            payable;
 
 }
