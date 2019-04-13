@@ -152,7 +152,23 @@ contract FlightSuretyApp {
                             external
                             payable
     {
-        flightSuretyData.fund(msg.sender, msg.value);
+        flightSuretyData.fund.value(msg.value)(msg.sender);
+    }
+
+    /**
+    * @dev Buy insurance for flight
+    *
+    */   
+    function buy
+                            (
+                                address airline,
+                                string flight,
+                                uint256 timestamp
+                            )
+                            external
+                            payable
+    {
+        flightSuretyData.buy.value(msg.value)(msg.sender,airline, flight, timestamp);
     }
 
 
@@ -163,11 +179,14 @@ contract FlightSuretyApp {
     */  
     function registerFlight
                                 (
+                                    address airline,
+                                    string flightCode,
+                                    uint256 timestamp
                                 )
                                 external
-                                pure
     {
-
+        require(isAirlineFunded(msg.sender), "Only funded airlines can register a flight");
+        flightSuretyData.registerFlight(airline, flightCode, timestamp);
     }
     
    /**
@@ -177,13 +196,13 @@ contract FlightSuretyApp {
     function processFlightStatus
                                 (
                                     address airline,
-                                    string memory flight,
+                                    string flight,
                                     uint256 timestamp,
                                     uint8 statusCode
                                 )
                                 internal
-                                pure
     {
+        flightSuretyData.processFlightStatus(airline, flight, timestamp, statusCode);
     }
 
 
@@ -421,12 +440,37 @@ contract FlightSuretyData {
                                 ) 
                                 public returns (bool);
 
-    function fund
-                            (
-                                address sender,
-                                uint256 amount
-                            )
-                            public
-                            payable;
+    function registerFlight
+                                (
+                                    address airline,
+                                    string flightCode,
+                                    uint256 timestamp
+                                ) 
+                                external;                               
+ 
+    function processFlightStatus
+                                (
+                                    address airline,
+                                    string flight,
+                                    uint256 timestamp,
+                                    uint8 statusCode
+                                )
+                                external;
 
+
+    function fund
+                                (
+                                    address sender                                )
+                                public
+                                payable;
+
+    function buy
+                                (
+                                    address insuree,
+                                    address airline,
+                                    string flight,
+                                    uint256 timestamp
+                               )
+                                external
+                                payable;
 }

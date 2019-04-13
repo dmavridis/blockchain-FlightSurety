@@ -40,10 +40,11 @@ contract FlightSuretyData {
 
     mapping(address => Airline) private airlines;
     mapping(address => bool) private authorized;
-    mapping(address => uint256) private registeredAirline;
     mapping(bytes32 => bool) private addressVoted;
     mapping(address => uint256) private votes;
-    mapping(bytes32 => Flight) private flights;  
+    mapping(bytes32 => Flight) private flights;
+    mapping(bytes32 => uint256) private insureeFlightAmount;
+    mapping(bytes32 => address[]) private flightInsurees;
 
 
     /********************************************************************************************/
@@ -261,17 +262,61 @@ contract FlightSuretyData {
     }
 
 
+    function registerFlight
+                            (
+                                address airline,
+                                string flightCode,
+                                uint256 timestamp
+                            )
+                            external
+    {
+        require(isAirlineFunded(airline), "Only funded airlines can participate");
+        bytes32 flightKey = getFlightKey(airline, flightCode, timestamp);
+        require(!flights[flightKey].isRegistered, "Flight is already registered");
+
+        flights[flightKey] = Flight({
+                                        isRegistered: true,
+                                        statusCode: STATUS_CODE_UNKNOWN,
+                                        flightCode: flightCode,
+                                        updatedTimestamp: timestamp,
+                                        airline: airline
+                                    });
+    }
+
+
+    function processFlightStatus
+                                (
+                                    address airline,
+                                    string flightCode,
+                                    uint256 timestamp,
+                                    uint8 statusCode
+                                )
+                                external
+    {
+        bytes32 flightKey = getFlightKey(airline, flightCode, timestamp);
+        flights[flightKey].statusCode = statusCode;
+    }
+
+
    /**
     * @dev Buy insurance for a flight
-    *
-    */   
+    * Insuree pays the insurance amount which is stored in insureeFlightAmount mapping
+    * Insurees address is added to a list that stores all the insurees for the specific flight
+    */
     function buy
-                            (                             
+                            (
+                                address insuree,
+                                address airline,
+                                string flight,
+                                uint256 timestamp
                             )
                             external
                             payable
     {
-
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        bytes32 insureeKey = keccak256(abi.encodePacked(insuree, flightKey));
+        insureeFlightAmount[insureeKey] = msg.value;
+        flightInsurees[flightKey].push(insuree);
     }
 
     /**
@@ -292,10 +337,17 @@ contract FlightSuretyData {
     */
     function pay
                             (
+                                address airline,
+                                string flightCode,
+                                uint256 timestamp                              
                             )
                             external
-                            pure
     {
+        
+        bytes32 flightKey = getFlightKey(airline, flightCode, timestamp);
+        bytes32 insureeKey = keccak256(abi.encodePacked(msg.sender, flightKey));        
+        uint256 refund = insureeFlightAmount[insureeKey].mul(3).div(2);
+        contractOwner.transfer(refund);
     }
 
    /**
@@ -305,17 +357,15 @@ contract FlightSuretyData {
     */   
     function fund
                             (
-                                address sender,
-                                uint256 amount
+                                address airline
                             )
                             public
                             payable
     {
         
-        require(isAirline(sender), "Not a registered airline");
-        require(amount == AIRLINE_FUND_FEE, "Please pay the exact amount");
- //       address(this).transfer(amount);
-        airlines[sender].isFunded = true;
+        require(isAirline(airline), "Not a registered airline");
+        require(msg.value == AIRLINE_FUND_FEE, "Please pay the exact amount");
+        airlines[airline].isFunded = true;
     }
 
     function getFlightKey
