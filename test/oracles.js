@@ -16,9 +16,7 @@ contract('Oracles', async (accounts) => {
     const STATUS_CODE_LATE_WEATHER = 30;
     const STATUS_CODE_LATE_TECHNICAL = 40;
     const STATUS_CODE_LATE_OTHER = 50;
-
   });
-
 
   it('can register oracles', async () => {
     
@@ -29,7 +27,7 @@ contract('Oracles', async (accounts) => {
     for(let a=1; a<TEST_ORACLES_COUNT; a++) {      
       await config.flightSuretyApp.registerOracle({ from: accounts[a], value: fee });
       let result = await config.flightSuretyApp.getMyIndexes.call({from: accounts[a]});
-      console.log(`Oracle Registered: ${result[0]}, ${result[1]}, ${result[2]}`);
+      console.log(`Oracle ${a} Registered: ${result[0]}, ${result[1]}, ${result[2]}`);
     }
   });
 
@@ -52,23 +50,24 @@ contract('Oracles', async (accounts) => {
       // Get oracle information
       let oracleIndexes = await config.flightSuretyApp.getMyIndexes.call({ from: accounts[a]});
       for(let idx=0;idx<3;idx++) {
-
         try {
           // Submit a response...it will only be accepted if there is an Index match
-          await config.flightSuretyApp.submitOracleResponse(oracleIndexes[idx], config.firstAirline, flight, timestamp, STATUS_CODE_ON_TIME, { from: accounts[a] });
+          await config.flightSuretyApp.submitOracleResponse(
+                                                              oracleIndexes[idx], 
+                                                              config.firstAirline, 
+                                                              flight, 
+                                                              timestamp, 
+                                                              STATUS_CODE_ON_TIME, 
+                                                              { from: accounts[a] }
+                                                            );
+          console.log('Success', idx, oracleIndexes[idx].toNumber(), flight, timestamp);
 
         }
         catch(e) {
           // Enable this when debugging
-           console.log('\nError', idx, oracleIndexes[idx].toNumber(), flight, timestamp);
+          console.log('Error', idx, oracleIndexes[idx].toNumber(), flight, timestamp);
         }
-
       }
     }
-
-
-  });
-
-
- 
+  }); 
 });

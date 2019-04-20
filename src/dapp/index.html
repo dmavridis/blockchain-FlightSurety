@@ -20,7 +20,7 @@
     </nav>
 
     <main class="container">
-
+        <!----------------- Section 0 -------------------------->
         <div id="display-wrapper" class="top-20"></div>
         <h4>0 - Register Airline</h4>
 
@@ -35,28 +35,64 @@
 
         <h5>Registered Airlines</h5>
         <ul id="registeredAirline"></ul>
-
         <div id="display-wrapper-airlines"></div>
 
-
+        <!----------------- Section 1 -------------------------->
         <div id="display-wrapper" class="top-20">
         <h4>1 - Fund Airline</h4>
         <p>Populate the registered airlines from the Blockchain</p>
-        <btn class="btn btn-primary" id="populate-airline">Populate Registered Airlines</btn>
+        <btn class="btn btn-primary" id="populate-registered">Populate Registered Airlines</btn>
         <div class="row top-20"> 
         <p>Select airline to fund</p>
-        <select id="populateAirlines"></select>
+        <select id="populateRegistered"></select>
 
-        <div class="form">Fund Amount (ETH)</div><input type="text" id="fund-amount"> 
+        <h6>Fund Amount (ETH)</h6><input type="text" id="fund-amount"> 
         <btn class="btn btn-primary" id="fund-airline">Fund Airline</btn>
+        
+        <p>Populate the funded airlines from the Blockchain</p>
+        <btn class="btn btn-primary" id="populate-funded">Populate Funded Airlines</btn>
+        <select id="populateFunded"></select>
         </div>
 
-
-
+        <!----------------- Section 2 -------------------------->
         <div id="display-wrapper" class="top-20"></div>
-        <h4>2 - Register Flight</h4>
-        <p>Airline can register an upcoming flight</p>
+        <h4>2 - Buy Flight Insurance</h4>
+        <p>Airline can register an upcoming flight (airline has to be funded)</p>
 
+        <select id="populateFlights"></select>
+        <div class="flight-time">Flight Time: </div>
+        <div class="flight-airline">Flight Airline: </div>
+
+        <btn class="btn btn-primary" id="register-flight">Register Flight</btn>
+
+
+        <h6>Select passenger and amount to buy insurance </h6>
+        <select id="passengerList"></select>
+        <h6>Insurance Amount (ETH)</h6><input type="text" id="insurance-amount"> 
+
+        <btn class="btn btn-primary" id="buy-insurance">Buy Flight insurance</btn>
+
+        <!----------------- Section 3 -------------------------->
+        <h4>3 - Flight Update</h4>
+        <h5>Select the flight from previous section</h5>
+        <btn class="btn btn-primary" id="submit-oracles">Submit update to Oracles</btn>
+
+        <!----------------- Section 4 -------------------------->
+        <h4>4 - Claim Insurance</h4>
+        <h6>Select passenger account </h6>
+        <select id="passengerList2"></select>
+        <h5>Request Flight status update and try to claim flight insurance</h5>
+        <btn class="btn btn-primary" id="claim-insurance">Claim flight insurance</btn>
+        <h5>Check if I have credit from insurance</h5>
+        <div class="account-balance">Account balance: </div>
+
+        <btn class="btn btn-primary" id="check-credits">Check credits</btn>
+
+    
+        <btn class="btn btn-primary" id="check-balance">Check balance</btn>
+        <div id="display-balance" class="top-20"></div>
+        <h5>Withdraw insurance credits</h5>
+        <btn class="btn btn-primary" id="check-balance">Withdraw Credits</btn> 
 
     </main>
 

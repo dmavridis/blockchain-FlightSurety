@@ -9,13 +9,13 @@ contract FlightSuretyData {
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
-    address private contractOwner;                                      // Account used to deploy contract
-    bool private operational = true;                                    // Blocks all state changes throughout the contract if false
+    address private contractOwner;                              // Account used to deploy contract
+    bool private operational = true;                            // Blocks all state changes throughout the contract if false
 
-    uint32 cntAirlines = 0;                                     // tracks the number of registered airlines
+    uint32 private cntAirlines = 0;                                     // number of registered airlines
     uint32 private constant AIRLINE_COUNT_THRESHOLD = 4;
-    uint32 private constant AIRLINE_REGISTER_PCT_THRESHOLD = 50;  // 50%
-    uint256 public constant AIRLINE_FUND_FEE = 10 ether;
+    uint32 private constant AIRLINE_REGISTER_PCT_THRESHOLD = 50;  // 50% consensus for registering 5th airline
+    uint256 public constant AIRLINE_FUND_FEE = 10 ether;           
 
     // Flight status codees
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
@@ -38,13 +38,14 @@ contract FlightSuretyData {
         address airline;
     }  
 
-    mapping(address => Airline) private airlines;
-    mapping(address => bool) private authorized;
-    mapping(bytes32 => bool) private addressVoted;
-    mapping(address => uint256) private votes;
-    mapping(bytes32 => Flight) private flights;
-    mapping(bytes32 => uint256) private insureeFlightAmount;
-    mapping(bytes32 => address[]) private flightInsurees;
+    mapping(address => Airline) private airlines;               // added airlines
+    mapping(address => bool) private authorized;                // authorized airlines
+    mapping(bytes32 => bool) private addressVoted;              // 
+    mapping(address => uint256) private votes;                  // votes of airline during register process
+    mapping(bytes32 => Flight) flights;                         // list of flights
+    mapping(bytes32 => uint256) private passengerAmount;        // Insurance amount that passenger has paid for specific flight
+    mapping(bytes32 => address[]) private flightPassengers;      // list of insured passengers for specific flight
+    mapping(address => uint256) private passengerPayout;        // Amount to credit passenger of delayed flight
 
 
     /********************************************************************************************/
@@ -284,20 +285,6 @@ contract FlightSuretyData {
     }
 
 
-    function processFlightStatus
-                                (
-                                    address airline,
-                                    string flightCode,
-                                    uint256 timestamp,
-                                    uint8 statusCode
-                                )
-                                external
-    {
-        bytes32 flightKey = getFlightKey(airline, flightCode, timestamp);
-        flights[flightKey].statusCode = statusCode;
-    }
-
-
    /**
     * @dev Buy insurance for a flight
     * Insuree pays the insurance amount which is stored in insureeFlightAmount mapping
@@ -305,7 +292,7 @@ contract FlightSuretyData {
     */
     function buy
                             (
-                                address insuree,
+                                address passenger,
                                 address airline,
                                 string flight,
                                 uint256 timestamp
@@ -313,21 +300,32 @@ contract FlightSuretyData {
                             external
                             payable
     {
+        require(msg.value <= 1 ether, "Amount exceed maximum value");
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
-        bytes32 insureeKey = keccak256(abi.encodePacked(insuree, flightKey));
-        insureeFlightAmount[insureeKey] = msg.value;
-        flightInsurees[flightKey].push(insuree);
+        bytes32 passengerKey = keccak256(abi.encodePacked(passenger, flightKey));
+        passengerAmount[passengerKey] = msg.value;
+        flightPassengers[flightKey].push(passenger);
     }
 
     /**
-     *  @dev Credits payouts to insurees
+    *  @dev Credits payouts to insurees
+    *  When a flight is delayed passenger is credited x1.5 the amount of insurance
     */
     function creditInsurees
                                 (
+                                    address airline, 
+                                    string flight, 
+                                    uint256 timestamp
                                 )
                                 external
-                                pure
     {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        address[] storage passengers = flightPassengers[flightKey];
+        for (uint idx; idx < passengers.length; idx++) {
+            address passenger = passengers[idx];
+            bytes32 passengerKey = keccak256(abi.encodePacked(passenger, flightKey));
+            passengerPayout[passenger].add(passengerAmount[passengerKey]);
+        }
     }
     
 
@@ -337,17 +335,19 @@ contract FlightSuretyData {
     */
     function pay
                             (
+                                address passenger,                              
                                 address airline,
                                 string flightCode,
-                                uint256 timestamp                              
+                                uint256 timestamp
                             )
                             external
+                            payable
     {
         
+        require(passengerPayout[passenger] > 0, "This address is not credited any amount!");
         bytes32 flightKey = getFlightKey(airline, flightCode, timestamp);
-        bytes32 insureeKey = keccak256(abi.encodePacked(msg.sender, flightKey));        
-        uint256 refund = insureeFlightAmount[insureeKey].mul(3).div(2);
-        contractOwner.transfer(refund);
+        uint256 refund = passengerPayout[passenger];
+        passenger.transfer(refund);
     }
 
    /**
@@ -362,7 +362,6 @@ contract FlightSuretyData {
                             public
                             payable
     {
-        
         require(isAirline(airline), "Not a registered airline");
         require(msg.value == AIRLINE_FUND_FEE, "Please pay the exact amount");
         airlines[airline].isFunded = true;

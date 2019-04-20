@@ -12,6 +12,7 @@ export default class Contract {
         this.owner = null;
         this.airlines = [];
         this.passengers = [];
+
     }
 
     initialize(callback) {
@@ -28,6 +29,12 @@ export default class Contract {
         });
     }
 
+/*********************************************
+ * 
+ *  Utilitiy Functions
+ * 
+ ********************************************/
+
     isOperational(callback) {
        let self = this;
        self.flightSuretyApp.methods
@@ -43,19 +50,20 @@ export default class Contract {
              .call({ from: self.owner}, callback);
      }
 
-    fetchFlightStatus(flight, callback) {
+     isAirlineFunded(airline, callback) {
         let self = this;
-        let payload = {
-            airline: self.airlines[0],
-            flight: flight,
-            timestamp: Math.floor(Date.now() / 1000)
-        } 
+        console.log("checking: " + airline)
         self.flightSuretyApp.methods
-            .fetchFlightStatus(payload.airline, payload.flight, payload.timestamp)
-            .send({ from: self.owner}, (error, result) => {
-                callback(error, payload);
-            });
-    }
+             .isAirlineFunded(airline)
+             .call({ from: self.owner}, callback);
+     }
+
+
+/*********************************************
+ * 
+ *  Smart Contract Functions
+ * 
+ ********************************************/
 
     registerAirline(airline,fromAccount, callback){
         let self = this;
@@ -64,4 +72,55 @@ export default class Contract {
         .registerAirline(airline)
         .send({ from: fromAccount, "gas": 4712388,"gasPrice": 100000000000}, callback);
     }
+
+    fund(airline, callback){
+        let self = this;
+        self.flightSuretyApp.methods
+        .fund()
+        .send({ from: airline, value: this.web3.utils.toWei("10", "ether") , 
+                "gas": 4712388,"gasPrice": 100000000000}, callback);
+    }
+
+    buy(passenger, airline, flight, timestamp, callback){
+        let self = this;
+        self.flightSuretyApp.methods
+        .buy(airline, flight, timestamp)
+        .send({from: passenger, value: this.web3.utils.toWei("1", "ether") , 
+                "gas": 4712388,"gasPrice": 100000000000}, callback);
+
+    }
+
+
+    registerFlight(airline, flightCode, timestamp, callback){
+        let self = this
+        self.flightSuretyApp.methods
+        .registerFlight(airline, flightCode, timestamp)
+        .call({ from: airline}, callback);
+     }
+
+    fetchFlightStatus(airline, flightCode, timestamp, callback) {
+        let self = this;
+
+        self.flightSuretyApp.methods
+            .fetchFlightStatus(airline, flightCode, timestamp)
+            .send({ from: self.owner}, (error, result) => {
+                callback(error, result);
+            });
+    }
+
+    async accountBalance(account) {
+        let balance = await this.web3.eth.getBalance(account)
+        return await this.web3.utils.fromWei(balance);
+    }
+
+
+/*********************************************
+ * 
+ *  Events
+ * 
+ ********************************************/
+
+    
+
+
 }
