@@ -1,4 +1,6 @@
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
+import FlightSuretyData from '../../build/contracts/FlightSuretyData.json';
+
 import Config from './config.json';
 import Web3 from 'web3';
 
@@ -8,10 +10,12 @@ export default class Contract {
         let config = Config[network];
         this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
         this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
+        this.FlightSuretyData = new this.web3.eth.Contract(FlightSuretyData.abi, config.dataAddress);
         this.initialize(callback);
         this.owner = null;
         this.airlines = [];
         this.passengers = [];
+        this.oracles = []
 
     }
 
@@ -44,7 +48,6 @@ export default class Contract {
 
     isAirline(airline, callback) {
         let self = this;
-        console.log("checking: " + airline)
         self.flightSuretyApp.methods
              .isAirline(airline)
              .call({ from: self.owner}, callback);
@@ -52,7 +55,6 @@ export default class Contract {
 
      isAirlineFunded(airline, callback) {
         let self = this;
-        console.log("checking: " + airline)
         self.flightSuretyApp.methods
              .isAirlineFunded(airline)
              .call({ from: self.owner}, callback);
@@ -90,12 +92,11 @@ export default class Contract {
 
     }
 
-
     registerFlight(airline, flightCode, timestamp, callback){
         let self = this
         self.flightSuretyApp.methods
         .registerFlight(airline, flightCode, timestamp)
-        .call({ from: airline}, callback);
+        .send({from: airline, "gas": 4712388,"gasPrice": 100000000000}, callback);
      }
 
     fetchFlightStatus(airline, flightCode, timestamp, callback) {
@@ -113,14 +114,27 @@ export default class Contract {
         return await this.web3.utils.fromWei(balance);
     }
 
+    checkCredit(account, callback) {
+        let self = this;
+        self.flightSuretyApp.methods
+            .checkCredit()
+            .call({ from: account,"gas": 4712388,"gasPrice": 100000000000},
+            callback)
+    }  
 
-/*********************************************
- * 
- *  Events
- * 
- ********************************************/
+    passengerPaid(passenger,airline, flightCode, timestamp, callback) {
+        let self = this;
+        self.FlightSuretyData.methods
+            .boughtPassenger(passenger, airline, flightCode, timestamp)
+            .call({ from: passenger,"gas": 4712388,"gasPrice": 10000000000},callback)
+    }
 
-    
+    pay(passenger,airline, flightCode, timestamp, callback){
+        let self = this;
+        self.flightSuretyApp.methods
+            .pay(passenger,airline, flightCode, timestamp)
+            .send({from: passenger}, callback)
 
+    }
 
 }

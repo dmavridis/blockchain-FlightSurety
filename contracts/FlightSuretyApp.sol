@@ -200,7 +200,7 @@ contract FlightSuretyApp {
                                     uint256 timestamp,
                                     uint8 statusCode
                                 )
-                                internal
+                                public
     {
 
         if (statusCode == STATUS_CODE_LATE_AIRLINE) {
@@ -221,6 +221,16 @@ contract FlightSuretyApp {
                                 payable
     {
         flightSuretyData.pay(passenger,airline, flight, timestamp);
+    }
+
+    function checkCredit
+                            (
+                            )
+                            view
+                            external
+                            returns(uint256)
+    {
+        return flightSuretyData.checkCredit(msg.sender);
     }
 
 
@@ -476,6 +486,7 @@ contract FlightSuretyData {
                                )
                                 external
                                 payable;
+
     function pay
                                 (
                                     address passenger,                              
@@ -486,8 +497,6 @@ contract FlightSuretyData {
                                 external
                                 payable;
 
-
-
     function creditInsurees
                                 (
                                     address airline, 
@@ -495,4 +504,11 @@ contract FlightSuretyData {
                                     uint256 timestamp
                                 )
                                 external;
+    function checkCredit
+                                (
+                                    address passenger
+                                )
+                                    view
+                                    external
+                                    returns(uint256);
 }

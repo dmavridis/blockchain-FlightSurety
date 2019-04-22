@@ -8,6 +8,7 @@ import './flightsurety.css';
 (async() => {
 
     var date = new Date();
+    var Web3 = require("web3")
 
     let result = null;
     let registeredAirlines = [];
@@ -25,9 +26,11 @@ import './flightsurety.css';
 
 
         let flights = {
-            'AA123': [date.getTime(), contract.airlines[0]] ,
-            'ND063': [date.getTime()+1011, contract.airlines[1]],
-            'CX878':[date.getTime()+3022, contract.airlines[2]]
+            'AA123': [date.getTime() + 1, contract.airlines[0]],
+            'ND063': [date.getTime() + 1011, contract.airlines[1]],
+            'CX878': [date.getTime() + 3022, contract.airlines[2]],
+            'GU432': [date.getTime() + 2025, contract.airlines[3]],
+            'MM954': [date.getTime() + 4028, contract.airlines[4]]
         }
 
 
@@ -89,10 +92,6 @@ import './flightsurety.css';
             })
         })
 
-        DOM.elid('populate-registered').addEventListener('click', () => {
-            populateRegistered(contract.airlines, contract);
-        });
-
         DOM.elid('populate-funded').addEventListener('click', () => {
             populateFunded(contract.airlines, contract);
         });       
@@ -108,8 +107,10 @@ import './flightsurety.css';
 
         DOM.elid('register-flight').addEventListener('click', () => {
             let flightCode = populateFlights.options[populateFlights.selectedIndex].value;
-            let airline = flights[flightCode][1]
-            let timestamp = flights[flightCode][0]
+            let airline = flights[flightCode][1];
+            let timestamp = flights[flightCode][0];
+
+            console.log("Registering flight: " + flightCode + " " + airline + " " + timestamp)
             contract.registerFlight(airline, flightCode, timestamp, (error,result) => {
                 console.log(error)
             })
@@ -142,11 +143,50 @@ import './flightsurety.css';
             let acc = passengerList2.options[passengerList2.selectedIndex].value;
             let balance = await contract.accountBalance(acc);
             let displayDiv = DOM.elid("display-balance");
+            // Fisrt clear 
+            displayDiv.innerHTML = ''
             let section = DOM.section();
             section.appendChild(DOM.h5('Balance of passenger ' + acc + ' : ' + balance + ' ETH'));
             displayDiv.append(section)     
         });
 
+
+        DOM.elid('check-credits').addEventListener('click', async() => {
+            let acc = passengerList2.options[passengerList2.selectedIndex].value;
+            contract.checkCredit(acc, (error, result) => {
+
+            let displayDiv = DOM.elid("display-credit");
+            displayDiv.innerHTML = ''
+            let section = DOM.section();
+            section.appendChild(DOM.h5('Credits of passenger ' + acc + ' : ' + result + ' ETH'));
+            displayDiv.append(section)  
+
+
+            })
+   
+        });
+
+        DOM.elid('check-payment').addEventListener('click', async() => {
+            let acc = passengerList2.options[passengerList2.selectedIndex].value;
+            let flightCode = populateFlights.options[populateFlights.selectedIndex].value;
+            let airline = flights[flightCode][1];
+            let timestamp = flights[flightCode][0];
+            contract.passengerPaid(acc, airline, flightCode, timestamp, (error, result) => {
+
+                let paidAmount = Web3.utils.fromWei(result.toString(), 'ether')
+                console.log("Passenger has paid " + result)
+            })
+        });
+
+        DOM.elid('withdraw-credits').addEventListener('click', async() => {
+            let acc = passengerList2.options[passengerList2.selectedIndex].value;
+            let flightCode = populateFlights.options[populateFlights.selectedIndex].value;
+            let airline = flights[flightCode][1];
+            let timestamp = flights[flightCode][0];
+            contract.pay(acc, airline, flightCode, timestamp, (error, result) => {
+                console.log(error)
+            })
+        })
     })
 })();
 
@@ -183,6 +223,11 @@ function updateSelectList(selectId, listElements){
         selectList.appendChild(el);
     }  
 }
+function clearSelectList(selectId){
+    var selectList = DOM.elid(selectId);
+    selectList.innerHTML = '';
+}
+
 
 // Updates list elements
 function updateList(listId, listItem){
@@ -194,10 +239,15 @@ function updateList(listId, listItem){
 
 // Reads registered airlines from the blockchain
 async function populateRegistered(array,contract) {
+    // First clear the Selecte list
+    clearSelectList('populateRegistered');
+
+    // Update 
     for (const item of array) {
         await contract.isAirline(item, (error, result) => {
             if (result){
                 updateSelectList('populateRegistered', [item])
+
             }
         })
     }
@@ -206,6 +256,10 @@ async function populateRegistered(array,contract) {
 
 // Reads funded airlines from the blockchain
 async function populateFunded(array,contract) {
+    // Clear the list
+    clearSelectList('populateFunded');
+
+    // Update
     for (const item of array) {
         await contract.isAirlineFunded(item, (error, result) => {
             if (result){

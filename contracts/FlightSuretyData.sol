@@ -274,7 +274,6 @@ contract FlightSuretyData {
         require(isAirlineFunded(airline), "Only funded airlines can participate");
         bytes32 flightKey = getFlightKey(airline, flightCode, timestamp);
         require(!flights[flightKey].isRegistered, "Flight is already registered");
-
         flights[flightKey] = Flight({
                                         isRegistered: true,
                                         statusCode: STATUS_CODE_UNKNOWN,
@@ -303,8 +302,53 @@ contract FlightSuretyData {
         require(msg.value <= 1 ether, "Amount exceed maximum value");
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
         bytes32 passengerKey = keccak256(abi.encodePacked(passenger, flightKey));
-        passengerAmount[passengerKey] = msg.value;
+        uint256 currentAmount = passengerAmount[passengerKey];
+        require(currentAmount.add(msg.value) <= 1 ether);
+        passengerAmount[passengerKey] = currentAmount + msg.value;
         flightPassengers[flightKey].push(passenger);
+    }
+
+    // helper function
+    function boughtPassenger
+                            ( 
+                                address passenger,
+                                address airline,
+                                string flight,
+                                uint256 timestamp
+
+                            )
+                            external
+                            view
+                            returns(uint256)
+    {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        bytes32 passengerKey = keccak256(abi.encodePacked(passenger, flightKey));
+        return passengerAmount[passengerKey];
+    }
+
+    function payoutPassenger
+                            (
+                                address passenger
+                            )
+                            external
+                            view
+                            returns(uint256)
+    {
+        return passengerPayout[passenger];
+    }
+
+    function flightPassenger
+                            (
+                                address airline,
+                                string flight,
+                                uint256 timestamp
+                            )
+                            external
+                            view
+                            returns(address)
+    {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        return flightPassengers[flightKey][0];
     }
 
     /**
@@ -324,9 +368,11 @@ contract FlightSuretyData {
         for (uint idx; idx < passengers.length; idx++) {
             address passenger = passengers[idx];
             bytes32 passengerKey = keccak256(abi.encodePacked(passenger, flightKey));
-            passengerPayout[passenger].add(passengerAmount[passengerKey]);
+            uint256 refund = passengerAmount[passengerKey].mul(3).div(2);
+            passengerPayout[passenger] = passengerPayout[passenger].add(refund);
         }
     }
+
     
 
     /**
@@ -348,6 +394,7 @@ contract FlightSuretyData {
         bytes32 flightKey = getFlightKey(airline, flightCode, timestamp);
         uint256 refund = passengerPayout[passenger];
         passenger.transfer(refund);
+        passengerPayout[passenger] = passengerPayout[passenger].sub(refund);
     }
 
    /**
@@ -363,9 +410,23 @@ contract FlightSuretyData {
                             payable
     {
         require(isAirline(airline), "Not a registered airline");
+        require(!isAirlineFunded(airline), "Airline is already Funded");
         require(msg.value == AIRLINE_FUND_FEE, "Please pay the exact amount");
+
         airlines[airline].isFunded = true;
     }
+
+    function checkCredit
+                        (
+                            address passenger
+                        )
+                        view
+                        external
+                        returns(uint256)
+    {
+        return passengerPayout[passenger];
+    }
+
 
     function getFlightKey
                         (
