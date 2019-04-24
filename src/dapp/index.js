@@ -17,11 +17,11 @@ import './flightsurety.css';
 
 
     let contract = new Contract('localhost', () => {
-        /*******************************************************
+        /**
          * 
          *      Initialition part
          * 
-         * **************************************************** */    
+         **/    
 
 
 
@@ -61,17 +61,21 @@ import './flightsurety.css';
          * 
          ******************************************************************/
 
-        DOM.elid('register-airline').addEventListener('click', () => {
-            let from = selectAccount.options[selectAccount.selectedIndex].value
+        DOM.elid('register-airline').addEventListener('click', async () => {
+            let caller = selectAccount.options[selectAccount.selectedIndex].value
             let airline = selectAirline.options[selectAirline.selectedIndex].value
-            contract.registerAirline(airline, from, (error, result) => {
-                console.log('Register Airline ' + airline +': ' + result); 
-                console.log(error)
-                if (result){
+            contract.registerAirline(airline, caller , (error,result)=>{
+                let success = result['success']
+                console.log("Success: " + success)
+                let votes = result['votes']
+                if (success){
                     registeredAirlines.push(airline)
                     authorizedAccounts.push(airline)
-                    updateList('registeredAirline', [airline])
-                    updateSelectList('selectAccount', [airline])
+                    updateList('registeredAirline',registeredAirlines)
+                    updateSelectList('selectAccount', authorizedAccounts)
+                }
+                else if(!success){
+                    console.log("Needs more votes. Current votes: " + votes)
                 }
             })
         });

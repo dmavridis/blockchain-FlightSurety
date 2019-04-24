@@ -8,9 +8,11 @@ export default class Contract {
     constructor(network, callback) {
 
         let config = Config[network];
-        this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
+        this.web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace('http', 'ws')));
+
+//        this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
         this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
-        this.FlightSuretyData = new this.web3.eth.Contract(FlightSuretyData.abi, config.dataAddress);
+        this.flightSuretyData = new this.web3.eth.Contract(FlightSuretyData.abi, config.dataAddress);
         this.initialize(callback);
         this.owner = null;
         this.airlines = [];
@@ -69,10 +71,14 @@ export default class Contract {
 
     registerAirline(airline,fromAccount, callback){
         let self = this;
-        console.log('caller: ' + fromAccount);
         self.flightSuretyApp.methods
         .registerAirline(airline)
-        .send({ from: fromAccount, "gas": 4712388,"gasPrice": 100000000000}, callback);
+        .send({ from: fromAccount, "gas": 4712388,"gasPrice": 100000000000})
+        .then(this.flightSuretyData.events.evntRegisterAirline({fromBlock: "latest"}, 
+            function (error, event) {
+                callback(error,event.returnValues);
+            })
+        )
     }
 
     fund(airline, callback){

@@ -40,11 +40,11 @@ contract FlightSuretyData {
 
     mapping(address => Airline) private airlines;               // added airlines
     mapping(address => bool) private authorized;                // authorized airlines
-    mapping(bytes32 => bool) private addressVoted;              // 
+    mapping(bytes32 => bool) private addressVoted;              // used to avoid double voting in register airline
     mapping(address => uint256) private votes;                  // votes of airline during register process
     mapping(bytes32 => Flight) flights;                         // list of flights
     mapping(bytes32 => uint256) private passengerAmount;        // Insurance amount that passenger has paid for specific flight
-    mapping(bytes32 => address[]) private flightPassengers;      // list of insured passengers for specific flight
+    mapping(bytes32 => address[]) private flightPassengers;     // list of insured passengers for specific flight
     mapping(address => uint256) private passengerPayout;        // Amount to credit passenger of delayed flight
 
 
@@ -64,6 +64,9 @@ contract FlightSuretyData {
     {
         contractOwner = msg.sender;
     }
+
+
+    event evntRegisterAirline(bool success, uint256 votes);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -192,25 +195,25 @@ contract FlightSuretyData {
                         address _sender
                     )
                         internal
-                        returns(bool)
+                        returns(bool, uint256)
     {
         cntAirlines++;
         if (cntAirlines <= AIRLINE_COUNT_THRESHOLD){
-            return true;
+            return (true, 1);
         }
         cntAirlines--;
         bytes32 votedKey = keccak256(abi.encodePacked(_sender, airline));
-
         // If a different airline is adding this one, increase the votes
         if (!addressVoted[votedKey]){
             addressVoted[votedKey] = true;
-            votes[airline]++;
+            votes[airline] = votes[airline].add(1);
+
             if ((votes[airline].mul(100)).div(cntAirlines) >= AIRLINE_REGISTER_PCT_THRESHOLD){
                 cntAirlines++;
-                return true;
+                return (true, votes[airline]);
             }
         }
-        return false;
+        return (false, votes[airline]);
     }
 
     function owner() external view returns (address){
@@ -245,21 +248,21 @@ contract FlightSuretyData {
                                 address _sender
                             )
                             external
-                            returns (bool)
     {
-            require(!isAirline(airline), "Airline already registered");
-            bool success = false;
-            airlines[airline] =  Airline({
-                                           isRegistered: false, 
-                                           isFunded: false
-                                       });
+        require(!isAirline(airline), "Airline already registered");
+        bool _success;
+        uint256 _votes;
+        airlines[airline] =  Airline({
+                                        isRegistered: false, 
+                                        isFunded: false
+                                    });
+        (_success, _votes) = consensusAirline(airline, _sender);
+        if (_success){
+            airlines[airline].isRegistered = true;     
+            authorized[airline] = true;
+        }
 
-            if (consensusAirline(airline, _sender)){
-                airlines[airline].isRegistered = true;     
-                authorized[airline] = true;
-                success = true;
-            }
-            return success;
+        emit evntRegisterAirline(_success, _votes);
     }
 
 
@@ -308,7 +311,7 @@ contract FlightSuretyData {
         flightPassengers[flightKey].push(passenger);
     }
 
-    // helper function
+    // helper function, for testing, returns the amount that passenger has paid for specific flight
     function boughtPassenger
                             ( 
                                 address passenger,
@@ -326,6 +329,7 @@ contract FlightSuretyData {
         return passengerAmount[passengerKey];
     }
 
+    // Helper function, it checks the amount passenger has been credited
     function payoutPassenger
                             (
                                 address passenger
@@ -337,6 +341,7 @@ contract FlightSuretyData {
         return passengerPayout[passenger];
     }
 
+    // helper function, returns the first passenger from the list of passengers of a flight
     function flightPassenger
                             (
                                 address airline,

@@ -37,7 +37,9 @@ contract FlightSuretyApp {
     }
     mapping(bytes32 => Flight) private flights;
 
- 
+
+
+
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
     /********************************************************************************************/
@@ -134,10 +136,9 @@ contract FlightSuretyApp {
                                 address airline
                             )
                             external 
-                            returns(bool)
     {
         require(flightSuretyData.isAuthorized(msg.sender), "Caller not authorized");
-        return flightSuretyData.registerAirline(airline, msg.sender);
+        flightSuretyData.registerAirline(airline, msg.sender);
     }
 
 
@@ -454,8 +455,8 @@ contract FlightSuretyData {
                                     address airline,
                                     address _sender
                                 ) 
-                                external
-                                returns (bool);
+                                external;
+
                             
     function isAirline
                                 (
@@ -473,7 +474,8 @@ contract FlightSuretyData {
  
     function fund
                                 (
-                                    address sender                                )
+                                    address sender
+                                )
                                 public
                                 payable;
 

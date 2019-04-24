@@ -22,34 +22,42 @@
     <main class="container">
         <!----------------- Section 0 -------------------------->
         <div id="display-wrapper" class="top-20"></div>
+
+        
         <h4>0 - Register Airline</h4>
-
-        <div class="row top-20">
-        <btn class="btn btn-primary" id="register-airline">Create Airline</btn></div>
-
-        <h5>Airline Accounts to be registered</h5>
+        <div class="row top-20"> 
+        <p>Register the following airlines. The first four are registered by a single authorized entity. 
+            From the fifth and beyond a consensus of 50% is required. </p>
+        
+        <h5>Airline Accounts to be registered</h5> </div>
         <select id="selectAirline"></select>
-
-        <h5>Authorized Accounts</h5>
+        <div class="row top-20"> 
+        <h5>Authorized Accounts</h5></div>
         <select id="selectAccount"></select>
 
-        <h5>Registered Airlines</h5>
+        <div class="row top-20"> 
+        <h5>Registered Airlines</h5></div>
         <ul id="registeredAirline"></ul>
         <div id="display-wrapper-airlines"></div>
+        <btn class="btn btn-primary" id="register-airline">Create Airline</btn></div>
+        
 
         <!----------------- Section 1 -------------------------->
         <div id="display-wrapper" class="top-20">
         <h4>1 - Fund Airline</h4>
-        <p>Populate the registered airlines from the Blockchain</p>
+        <h6>Populate the registered airlines from the Blockchain</h6>
         <btn class="btn btn-primary" id="populate-registered">Populate Registered Airlines</btn>
+        </div>
         <div class="row top-20"> 
-        <p>Select airline to fund</p>
+        <h6>Select airline to fund</h6>
         <select id="populateRegistered"></select>
-
+        </div>
+        <div class="row top-20"> 
         <h6>Fund Airlne 10 ETH</h6> 
         <btn class="btn btn-primary" id="fund-airline">Fund Airline</btn>
-        
-        <p>Populate the funded airlines from the Blockchain</p>
+        </div>
+        <div class="row top-20"> 
+        <h6>Populate the funded airlines from the Blockchain</h6>
         <btn class="btn btn-primary" id="populate-funded">Populate Funded Airlines</btn>
         <select id="populateFunded"></select>
         </div>

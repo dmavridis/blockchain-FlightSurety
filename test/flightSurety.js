@@ -153,5 +153,5 @@ contract('Flight Surety Tests', async (accounts) => {
     
     assert.equal(res1, 1.5, "Passenger has bought insurance");
     assert.equal(res2, .75, "Passenger has bought insurance");
-  })
+   })
 });
